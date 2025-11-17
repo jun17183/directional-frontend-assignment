@@ -1,6 +1,7 @@
 # Directional 프론트엔드 과제
 
 Next.js 기반의 게시판 및 데이터 시각화 대시보드 애플리케이션
+https://directional-frontend-assignment.vercel.app/
 
 ## 기술 스택
 
