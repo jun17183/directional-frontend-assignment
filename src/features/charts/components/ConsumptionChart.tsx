@@ -19,6 +19,22 @@ const TEAM_COLORS = {
   AI: '#f59e0b', // 앰버
 } as const;
 
+// 사각형 마커 컴포넌트 (생산성 라인용)
+const SquareDot = (props: any) => {
+  const { cx, cy, fill } = props;
+  return (
+    <rect
+      x={cx - 4}
+      y={cy - 4}
+      width={8}
+      height={8}
+      fill={fill}
+      stroke={fill}
+      strokeWidth={1}
+    />
+  );
+};
+
 export const ConsumptionChart = () => {
   const { data, isLoading, error } = useCoffeeConsumption();
 
@@ -143,12 +159,66 @@ export const ConsumptionChart = () => {
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
                 boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                zIndex: 9999,
               }}
-              formatter={(value: number, name: string) => {
-                const [team, metric] = name.split(' - ');
-                return [`${value}${metric === '생산성' ? '%' : ''}`, `${team} ${metric}`];
+              content={({ active, payload, label }) => {
+                if (!active || !payload || !payload.length) return null;
+
+                // 호버된 포인트의 모든 데이터 수집
+                const cups = label as number;
+                const tooltipItems: Array<{ team: string; bugs?: number; productivity?: number }> = [];
+
+                payload.forEach((item) => {
+                  const name = item.name as string;
+                  const [team, metric] = name.split(' - ');
+                  const value = item.value as number;
+
+                  let existingItem = tooltipItems.find((t) => t.team === team);
+                  if (!existingItem) {
+                    existingItem = { team };
+                    tooltipItems.push(existingItem);
+                  }
+
+                  if (metric === '버그') {
+                    existingItem.bugs = value;
+                  } else if (metric === '생산성') {
+                    existingItem.productivity = value;
+                  }
+                });
+
+                return (
+                  <Box
+                    sx={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 1,
+                      p: 1.5,
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                      커피 {cups}잔
+                    </Typography>
+                    {tooltipItems.map((item) => (
+                      <Box key={item.team} sx={{ mb: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: TEAM_COLORS[item.team as keyof typeof TEAM_COLORS] || '#6366f1' }}>
+                          {item.team}
+                        </Typography>
+                        {item.bugs !== undefined && (
+                          <Typography variant="caption" sx={{ display: 'block', ml: 1 }}>
+                            버그 수: {item.bugs}
+                          </Typography>
+                        )}
+                        {item.productivity !== undefined && (
+                          <Typography variant="caption" sx={{ display: 'block', ml: 1 }}>
+                            생산성: {item.productivity}%
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                );
               }}
-              labelFormatter={(label) => `커피 ${label}잔`}
             />
             <Legend
               wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
@@ -178,7 +248,7 @@ export const ConsumptionChart = () => {
                     stroke={color}
                     strokeWidth={2.5}
                     strokeDasharray="5 5"
-                    dot={{ r: 5, fill: color }}
+                    dot={<SquareDot fill={color} />}
                     activeDot={{ r: 7 }}
                     name={`${team.team} - 생산성`}
                   />

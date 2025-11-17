@@ -99,6 +99,7 @@ export const MoodTrendChart = () => {
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
                 boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                zIndex: 9999,
               }}
             />
             <Legend wrapperStyle={{ fontSize: '12px' }} />
